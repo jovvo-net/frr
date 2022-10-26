@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <linux/version.h>
+#include <sys/utsname.h>
+
 #include <zebra.h>
 
 #include "memory.h"
@@ -167,6 +170,7 @@ DEFUN (show_srv6_locator_detail,
 		prefix2str(&locator->prefix, str, sizeof(str));
 		vty_out(vty, "Name: %s\n", locator->name);
 		vty_out(vty, "Prefix: %s\n", str);
+		vty_out(vty, "Reduced headend behavior: %s\n", locator->reduced_headend_behavior ? "enabled" : "disabled");
 		vty_out(vty, "Function-Bit-Len: %u\n",
 			locator->function_bits_length);
 
@@ -266,6 +270,57 @@ DEFUN (no_srv6_locator,
 	}
 
 	zebra_srv6_locator_delete(locator);
+	return CMD_SUCCESS;
+}
+
+static bool check_kernel_for_reduced_behavior(void) {
+	int maj = LINUX_VERSION_CODE >> 16;
+	int min = ( LINUX_VERSION_CODE - ( maj << 16 ) ) >> 8;
+	int pat = LINUX_VERSION_CODE - ( maj << 16 ) - ( min << 8 );
+
+	if ((maj == 5 && min == 10 && pat == 70) ||
+		(maj == 5 && min == 17 && pat >= 72) ||
+		(maj >= 6 && min >= 0)
+	) {
+		return true;
+	}
+
+	return false;
+}
+
+DEFPY (locator_reduced_headend_behavior,
+       locator_reduced_headend_behavior_cmd,
+       "headend behavior reduced",
+       "Mark SRv6 reduced headend behavior for specified locator as enabled\n"
+	   "Enable SRv6 reduced headend behavior (available for kernels with uSID support)\n")
+{
+	VTY_DECLVAR_CONTEXT(srv6_locator, locator);
+	
+	if (!check_kernel_for_reduced_behavior()) {
+		vty_out(vty, "%% Unable to configure reduced headend behavior on current kernel version\n");
+		return CMD_WARNING_CONFIG_FAILED;
+	}
+
+	locator->reduced_headend_behavior = true;
+
+	return CMD_SUCCESS;
+}
+
+DEFPY (no_locator_reduced_headend_behavior,
+       no_locator_reduced_headend_behavior_cmd,
+       "no headend behavior reduced",
+       "Mark SRv6 reduced headend behavior for specified locator as disabled\n"
+	   "Disable SRv6 reduced headend behavior (available for kernels with uSID support)\n")
+{
+	VTY_DECLVAR_CONTEXT(srv6_locator, locator);
+	
+	if (!check_kernel_for_reduced_behavior()) {
+		vty_out(vty, "%% Unable to configure reduced headend behavior on current kernel version\n");
+		return CMD_WARNING_CONFIG_FAILED;
+	}
+
+	locator->reduced_headend_behavior = false;
+
 	return CMD_SUCCESS;
 }
 
@@ -407,6 +462,8 @@ void zebra_srv6_vty_init(void)
 
 	/* Command for configuration */
 	install_element(SRV6_LOC_NODE, &locator_prefix_cmd);
+	install_element(SRV6_LOC_NODE, &locator_reduced_headend_behavior_cmd);
+	install_element(SRV6_LOC_NODE, &no_locator_reduced_headend_behavior_cmd);
 
 	/* Command for operation */
 	install_element(VIEW_NODE, &show_srv6_locator_cmd);

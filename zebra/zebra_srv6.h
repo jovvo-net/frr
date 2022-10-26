@@ -64,6 +64,7 @@ extern struct srv6_locator *zebra_srv6_locator_lookup(const char *name);
 extern void zebra_srv6_init(void);
 extern struct zebra_srv6 *zebra_srv6_get_default(void);
 extern bool zebra_srv6_is_enable(void);
+extern bool zebra_reduced_headend_behavior_is_enabled(void);
 
 extern void srv6_manager_client_connect_call(struct zserv *client,
 					     vrf_id_t vrf_id);

@@ -384,3 +384,18 @@ bool zebra_srv6_is_enable(void)
 
 	return listcount(srv6->locators);
 }
+
+bool zebra_reduced_headend_behavior_is_enabled() {
+	struct zebra_srv6 *srv6 = zebra_srv6_get_default();
+	struct srv6_locator *locator;
+	struct listnode *node;
+
+	for (ALL_LIST_ELEMENTS_RO(srv6->locators, node, locator)) {
+		zlog_debug("%s: locator heb=%d", __func__, locator->reduced_headend_behavior);
+		if (locator->reduced_headend_behavior) {
+			return true;
+		}
+	}
+
+	return false;
+}

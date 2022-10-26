@@ -1400,7 +1400,7 @@ static bool _netlink_route_encode_nexthop_src(const struct nexthop *nexthop,
 }
 
 static ssize_t fill_seg6ipt_encap(char *buffer, size_t buflen,
-				  const struct in6_addr *seg)
+				  const struct in6_addr *seg, bool reduced_headend_behavior)
 {
 	struct seg6_iptunnel_encap *ipt;
 	struct ipv6_sr_hdr *srh;
@@ -1422,7 +1422,11 @@ static ssize_t fill_seg6ipt_encap(char *buffer, size_t buflen,
 	memset(buffer, 0, buflen);
 
 	ipt = (struct seg6_iptunnel_encap *)buffer;
-	ipt->mode = SEG6_IPTUN_MODE_ENCAP;
+	if (reduced_headend_behavior) {
+		ipt->mode = SEG6_IPTUN_MODE_ENCAP_RED;
+	} else {
+		ipt->mode = SEG6_IPTUN_MODE_ENCAP;
+	}
 	srh = ipt->srh;
 	srh->hdrlen = (srhlen >> 3) - 1;
 	srh->type = 4;
@@ -1561,7 +1565,8 @@ static bool _netlink_route_build_singlepath(const struct prefix *p,
 			if (!nest)
 				return false;
 			tun_len = fill_seg6ipt_encap(tun_buf, sizeof(tun_buf),
-					&nexthop->nh_srv6->seg6_segs);
+					&nexthop->nh_srv6->seg6_segs,
+					nexthop->reduced_headend_behavior);
 			if (tun_len < 0)
 				return false;
 			if (!nl_attr_put(nlmsg, req_size, SEG6_IPTUNNEL_SRH,
@@ -2729,7 +2734,8 @@ ssize_t netlink_nexthop_msg_encode(uint16_t cmd,
 						return 0;
 					tun_len = fill_seg6ipt_encap(tun_buf,
 					    sizeof(tun_buf),
-					    &nh->nh_srv6->seg6_segs);
+					    &nh->nh_srv6->seg6_segs,
+						nh->reduced_headend_behavior);
 					if (tun_len < 0)
 						return 0;
 					if (!nl_attr_put(&req->n, buflen,

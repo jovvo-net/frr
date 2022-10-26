@@ -145,6 +145,7 @@ struct nexthop {
 
 	/* SRv6 information */
 	struct nexthop_srv6 *nh_srv6;
+	bool reduced_headend_behavior;
 };
 
 /* Utility to append one nexthop to another. */

@@ -824,9 +824,11 @@ void nexthop_copy_no_recurse(struct nexthop *copy,
 			nexthop_add_srv6_seg6local(copy,
 				nexthop->nh_srv6->seg6local_action,
 				&nexthop->nh_srv6->seg6local_ctx);
-		if (!sid_zero(&nexthop->nh_srv6->seg6_segs))
+		if (!sid_zero(&nexthop->nh_srv6->seg6_segs)) {
+			copy->reduced_headend_behavior = nexthop->reduced_headend_behavior;
 			nexthop_add_srv6_seg6(copy,
 				&nexthop->nh_srv6->seg6_segs);
+		}
 	}
 }
 

@@ -1852,6 +1852,7 @@ static struct nexthop *nexthop_set_resolved(afi_t afi,
 		nexthop_add_srv6_seg6local(resolved_hop,
 					   nexthop->nh_srv6->seg6local_action,
 					   &nexthop->nh_srv6->seg6local_ctx);
+		resolved_hop->reduced_headend_behavior = zebra_reduced_headend_behavior_is_enabled();
 		nexthop_add_srv6_seg6(resolved_hop,
 				      &nexthop->nh_srv6->seg6_segs);
 	}

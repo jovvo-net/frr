@@ -85,6 +85,9 @@ struct srv6_locator {
 	char name[SRV6_LOCNAME_SIZE];
 	struct prefix_ipv6 prefix;
 
+	/* Microsid support */
+	bool reduced_headend_behavior;
+
 	/*
 	 * Bit length of SRv6 locator described in
 	 * draft-ietf-bess-srv6-services-05#section-3.2.1
