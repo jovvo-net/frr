@@ -315,6 +315,7 @@ DEFPY (locator_reduced_headend_behavior,
 DEFPY (no_locator_reduced_headend_behavior,
        no_locator_reduced_headend_behavior_cmd,
        "no headend behavior reduced",
+	   "Mark SRv6 reduced headend behavior for specified locator as disabled\n"
        "Mark SRv6 reduced headend behavior for specified locator as disabled\n"
 	   "Disable SRv6 reduced headend behavior (available for kernels with uSID support)\n"
 	   "Reset reduced headend behavior (available for kernels with uSID support)\n")
@@ -445,17 +446,19 @@ static int zebra_sr_config(struct vty *vty)
 			inet_ntop(AF_INET6, &locator->prefix.prefix,
 				  str, sizeof(str));
 			vty_out(vty, "   locator %s\n", locator->name);
+			if (locator->reduced_headend_behavior)
+				vty_out(vty, "    headend behavior reduced\n");
 			vty_out(vty, "    prefix %s/%u", str,
 				locator->prefix.prefixlen);
+			if (locator->function_bits_length)
+				vty_out(vty, " func-bits %u",
+					locator->function_bits_length);
 			if (locator->block_bits_length)
 				vty_out(vty, " block-len %u",
 					locator->block_bits_length);
 			if (locator->node_bits_length)
 				vty_out(vty, " node-len %u",
 					locator->node_bits_length);
-			if (locator->function_bits_length)
-				vty_out(vty, " func-bits %u",
-					locator->function_bits_length);
 			if (locator->argument_bits_length)
 				vty_out(vty, " arg-len %u",
 					locator->argument_bits_length);
